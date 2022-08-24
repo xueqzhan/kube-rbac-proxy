@@ -27,7 +27,7 @@ All command line flags:
 [embedmd]:# (_output/help.txt)
 ```txt
 $ kube-rbac-proxy -h
-Usage of _output/kube-rbac-proxy:
+Usage of ./kube-rbac-proxy:
       --add_dir_header                              If true, adds the file directory to the header of the log messages
       --allow-paths strings                         Comma-separated list of paths against which kube-rbac-proxy pattern-matches the incoming request. If the request doesn't match, kube-rbac-proxy responds with a 404 status code. If omitted, the incoming request path isn't checked. Cannot be used with --ignore-paths.
       --alsologtostderr                             log to standard error as well as files (no effect when -logtostderr=true)
@@ -36,6 +36,7 @@ Usage of _output/kube-rbac-proxy:
       --auth-header-groups-field-separator string   The separator string used for concatenating multiple group names in a groups header field's value (default "|")
       --auth-header-user-field-name string          The name of the field inside a http(2) request header to tell the upstream server about the user's name (default "x-remote-user")
       --auth-token-audiences strings                Comma-separated list of token audiences to accept. By default a token does not have to have any specific audience. It is recommended to set a specific audience.
+      --authentication-skip-lookup                  If false, the authentication-kubeconfig will be used to lookup missing authentication configuration from the cluster. (default true)
       --client-ca-file string                       If set, any request presenting a client certificate signed by one of the authorities in the client-ca-file is authenticated with an identity corresponding to the CommonName of the client certificate.
       --config-file string                          Configuration file to configure kube-rbac-proxy.
       --ignore-paths strings                        Comma-separated list of paths against which kube-rbac-proxy pattern-matches the incoming request. If the requst matches, it will proxy the request without performing an authentication or authorization check. Cannot be used with --allow-paths.
@@ -62,10 +63,9 @@ Usage of _output/kube-rbac-proxy:
       --tls-cipher-suites strings                   Comma-separated list of cipher suites for the server. Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants). If omitted, the default Go cipher suites will be used
       --tls-min-version string                      Minimum TLS version supported. Value must match version names from https://golang.org/pkg/crypto/tls/#pkg-constants. (default "VersionTLS12")
       --tls-private-key-file string                 File containing the default x509 private key matching --tls-cert-file.
-      --tls-reload-interval duration                The interval at which to watch for TLS certificate changes, by default set to 1 minute. (default 1m0s)
       --upstream string                             The upstream URL to proxy to once requests have successfully been authenticated and authorized.
       --upstream-ca-file string                     The CA the upstream uses for TLS connection. This is required when the upstream uses TLS and its own CA certificate
-      --upstream-force-h2c                          Force h2c to communiate with the upstream. This is required when the upstream speaks h2c(http/2 cleartext - insecure variant of http/2) only. For example, go-grpc server in the insecure mode, such as helm's tiller w/o TLS, speaks h2c only
+      --upstream-force-h2c                          Force h2c to communiate with the upstream. This is required when the upstream speaks h2c(http/2 cleartext - insecure variant of http/2) only. For example, go-grpc server in the insecure mode, such as helm's tiller w/c TLS, speaks h2c only
   -v, --v Level                                     number for the log level verbosity
       --vmodule moduleSpec                          comma-separated list of pattern=N settings for file-filtered logging
 ```
@@ -119,6 +119,13 @@ Additionally, to my knowledge Envoy neither has nor plans Kubernetes specific RB
 To run tests locally, you need to have [kind](https://kind.sigs.k8s.io/) installed. By default it uses the default cluster, so be aware that it might override your default cluster.
 
 The command to execute the tests is: `VERSION=local make clean container kind-create-cluster test`.
+
+If building from mac, you need to split the command into two parts:
+
+```
+GOOS=linux VERSION=local make clean container kind-create-cluster
+VERSION=local make test-e2e
+```
 
 ## Roadmap
 
